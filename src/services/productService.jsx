@@ -1,16 +1,8 @@
+import { PRODUCT_API } from '../constants/apiPathConstants';
 import apiBase from "./apiBase";
 
 // Định nghĩa endpoint dạng hằng số (hàm nếu có tham số động)
-const PRODUCT_API = {
-  SEARCH: '/products/search',
-  ALL: '/products/all',
-  PAGE: '/products/page',
-  BY_CATEGORY: '/products/category/by-category-name',
-  GET_BY_ID: (productId) => `/products/product/${productId}`,
-  CREATE: '/products/add',
-  UPDATE: (productId) => `/products/${productId}`,
-  DELETE: (productId) => `/products/${productId}`,
-};
+
 
 const productService = {
   searchByUsers: (params) =>

@@ -1,50 +1,39 @@
-import apiBase from "./apiBase";
-import authService from "./authService";
-import useAuthStore from "../stores/useAuthStore";
+import apiBase from './apiBase';
+import authService, { isAuthFailure } from './authService';
+import useAuthStore from '../stores/useAuthStore';
 
-let isRefreshing = false;
-let failedQueue = [];
+const isAuthEndpoint = (url = '') => /\/auth\/(login|refresh|logout|introspect|forgot-password|reset-password)(?:[/?]|$)/.test(url)
+  || /\/users\/registration(?:[/?]|$)/.test(url);
 
-const processQueue = (error) => {
-    failedQueue.forEach(p =>
-        error ? p.reject(error) : p.resolve()
-    );
-    failedQueue = [];
-};
-
+apiBase.interceptors.request.use((request) => {
+  const state = authService.getSessionState();
+  request._authVersion = state.version;
+  request._authIdentity = state.identity;
+  return request;
+});
 
 apiBase.interceptors.response.use(
-    response => response,
-    async error => {
-        const originalRequest = error.config;
-
-        if (!error.response) {
-            return Promise.reject(error);
-        }
-
-        if (error.response.status === 401 && !originalRequest._retry) {
-            if (isRefreshing) {
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                }).then(() => apiBase(originalRequest));
-            }
-
-            originalRequest._retry = true;
-            isRefreshing = true;
-
-            try {
-                await authService.refresh_token();
-                processQueue(null);
-                return apiBase(originalRequest);
-            } catch (err) {
-                processQueue(err);
-                useAuthStore.getState().logout();
-                return Promise.reject(err);
-            } finally {
-                isRefreshing = false;
-            }
-        }
-
-        return Promise.reject(error);
+  response => response,
+  async error => {
+    const request = error.config;
+    if (!request || error.response?.status !== 401 || request._retry || request.skipAuthRefresh || isAuthEndpoint(request.url)) {
+      return Promise.reject(error);
     }
+    const current = authService.getSessionState();
+    // Never replay an action from account A after another tab signed in as account B.
+    if (request._authIdentity !== current.identity) return Promise.reject(error);
+    request._retry = true;
+    try {
+      if (request._authVersion === current.version) {
+        await authService.ensureSession({ identity: request._authIdentity });
+      }
+      if (request._authIdentity !== authService.getSessionState().identity) return Promise.reject(error);
+    } catch (refreshError) {
+      if (isAuthFailure(refreshError) && request._authIdentity === authService.getSessionState().identity) {
+        useAuthStore.getState().invalidateSession();
+      }
+      return Promise.reject(refreshError);
+    }
+    return apiBase(request);
+  },
 );

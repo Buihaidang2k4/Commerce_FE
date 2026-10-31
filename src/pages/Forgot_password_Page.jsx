@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/image/mylogo.png';
+import validateEmail, { normalizeEmail } from '@/utils/validateEmail';
+import getApiErrorMessage from '@/utils/authError';
 import useForgotPassword from '../hooks/auth/forgot_password/useForgotPassword';
 import { 
     Mail, 
@@ -19,34 +21,34 @@ export default function ForgotPasswordPage() {
     const [loading, setLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState('');
-    const { mutate: forgotPassword } = useForgotPassword();
+    const { mutateAsync: forgotPassword } = useForgotPassword();
+    const inFlight = useRef(false);
+    const [sentAt, setSentAt] = useState(null);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (inFlight.current) return;
+        const address = normalizeEmail(email);
+        const validation = validateEmail(address);
+        if (validation) { setError(validation); return; }
+        inFlight.current = true;
         setError('');
         setLoading(true);
-
         try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            await forgotPassword({ email: address });
+            setEmail(address);
+            setSentAt(Date.now());
             setIsSubmitted(true);
-        } catch (err) {
-            setError('Email không tồn tại hoặc có lỗi xảy ra.');
-            console.error(err);
+        } catch (failure) {
+            setError(getApiErrorMessage(failure, 'Chưa thể gửi mã khôi phục. Vui lòng thử lại.'));
         } finally {
+            inFlight.current = false;
             setLoading(false);
         }
     };
 
     const handleClickOpenEmail = () => {
-        forgotPassword({ email });
-
-        setTimeout(
-            navigate("/forgot-password-otp",
-                {
-                    state: { email },
-                }
-            ), 3000
-        );
+        navigate('/forgot-password-otp', { state: { email, otpSentAt: sentAt } });
     };
 
     return (
@@ -84,6 +86,7 @@ export default function ForgotPasswordPage() {
                     {!isSubmitted ? (
                         /* --- FORM NHẬP EMAIL --- */
                         <form onSubmit={handleSubmit} className="space-y-5">
+                            <fieldset disabled={loading} className="contents">
                             <div className="space-y-1.5">
                                 <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
                                     Địa chỉ Email tài khoản <span className="text-red-500">*</span>
@@ -95,6 +98,7 @@ export default function ForgotPasswordPage() {
                                     <input
                                         id="email"
                                         type="email"
+                                    maxLength={254}
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
@@ -130,6 +134,7 @@ export default function ForgotPasswordPage() {
                                     </>
                                 )}
                             </button>
+                            </fieldset>
                         </form>
                     ) : (
                         /* --- THÔNG BÁO GỬI THÀNH CÔNG --- */
@@ -139,14 +144,14 @@ export default function ForgotPasswordPage() {
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 mb-2">Kiểm tra hộp thư đến</h2>
                             <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-                                Chúng tôi đã chuẩn bị mã OTP xác thực và hướng dẫn cho email:
+                                Nếu email thuộc tài khoản đang hoạt động, mã OTP sẽ được gửi đến:
                                 <br />
                                 <span className="font-semibold text-slate-900">{email}</span>
                             </p>
 
                             <div className="space-y-3">
                                 <button
-                                    onClick={() => handleClickOpenEmail()}
+                                    onClick={handleClickOpenEmail}
                                     className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition"
                                 >
                                     Tiếp tục nhập mã OTP
@@ -156,7 +161,7 @@ export default function ForgotPasswordPage() {
                                     onClick={() => setIsSubmitted(false)}
                                     className="text-sm text-blue-600 hover:underline font-semibold"
                                 >
-                                    Chưa nhận được email? Bấm để thử lại
+                                    Đổi địa chỉ email
                                 </button>
                             </div>
                         </div>

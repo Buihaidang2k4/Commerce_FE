@@ -1,62 +1,41 @@
-import { useEffect, useState } from "react";
-import userService from "@/services/userService";
-import validateEmail from "@/utils/validateEmail";
-import validatePassword from "@/utils/validatePassword";
+import { useRef, useState } from 'react';
+import authService from '@/services/authService';
+import validateEmail, { normalizeEmail } from '@/utils/validateEmail';
+import validatePassword from '@/utils/validatePassword';
+import getApiErrorMessage from '@/utils/authError';
 
 export default function useRegister() {
-    const [email, setEmail] = useState("");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [dialog, setDialog] = useState({ show: false, type: "", message: "" });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [dialog, setDialog] = useState({ show: false, type: '', message: '' });
+  const inFlight = useRef(false);
 
-    useEffect(() => {
-        setError(null);
-    }, [email, username, password, confirmPassword]);
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    if (inFlight.current || dialog.show) return;
+    const address = normalizeEmail(email);
+    const validation = validateEmail(address) || validatePassword(password)
+      || (password !== confirmPassword ? 'Mật khẩu xác nhận không khớp.' : '');
+    if (validation) { setError(validation); return; }
+    inFlight.current = true;
+    setLoading(true);
+    setError('');
+    try {
+      await authService.register({ email: address, password });
+      setEmail(address);
+      setPassword('');
+      setConfirmPassword('');
+      setDialog({ show: true, type: 'success', message: `Đã tạo tài khoản ${address}. Vui lòng đăng nhập để tiếp tục.` });
+    } catch (failure) {
+      setError(getApiErrorMessage(failure, 'Chưa thể đăng ký tài khoản. Vui lòng thử lại.'));
+    } finally {
+      inFlight.current = false;
+      setLoading(false);
+    }
+  };
 
-    const handleRegister = async (e) => {
-        e.preventDefault();
-
-        if (password !== confirmPassword) {
-            setError("Mật khẩu không khớp, vui lòng kiểm tra lại.");
-            return;
-        }
-
-        const emailError = validateEmail(email);
-        if (emailError) {
-            setError(validateEmail(email));
-            return;
-        }
-
-        const passwordError = validatePassword(password);
-        if (passwordError) {
-            setError(validatePassword(password));
-            return;
-        }
-
-        try {
-            const res = await userService.createUser({ email, username, password });
-            console.log("✅ Đăng ký thành công:", res);
-            setDialog({ show: true, type: "success", message: `🎉 Đăng ký thành công! Tài khoản: ${email}` });
-            setError(null);
-        } catch (error) {
-            const msg = error.response?.data?.message || "Đã có lỗi xảy ra trong quá trình đăng ký.";
-            setError(msg);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return {
-        email, setEmail,
-        username, setUsername,
-        password, setPassword,
-        confirmPassword, setConfirmPassword,
-        error,
-        loading,
-        handleRegister,
-        dialog, setDialog,
-    };
+  return { email, setEmail, password, setPassword, confirmPassword, setConfirmPassword, error, loading, dialog, setDialog, handleRegister };
 }

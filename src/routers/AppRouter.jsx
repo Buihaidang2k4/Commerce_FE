@@ -1,3 +1,4 @@
+import { ROLES, AUTH_PAGE_PATHS } from '../constants/authConstants';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -23,10 +24,7 @@ import MainLayout from '../layouts/MainLayout.jsx';
 import ProductSearch_Page from '../pages/ProductSearch_Page.jsx';
 import Order_Details from '../pages/Order_Details.jsx';
 
-const ROLES = {
-  USER: 'USER',
-  ADMIN: 'ADMIN',
-};
+
 
 export default function AppRouter() {
   return (
@@ -70,10 +68,10 @@ export default function AppRouter() {
           </Route>
 
           {/* Auth Pages */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/forgot-password-otp" element={<Forgot_password_otp_page />} />
+          <Route path={AUTH_PAGE_PATHS.LOGIN} element={<Login />} />
+          <Route path={AUTH_PAGE_PATHS.REGISTER} element={<Register />} />
+          <Route path={AUTH_PAGE_PATHS.FORGOT_PASSWORD} element={<ForgotPasswordPage />} />
+          <Route path={AUTH_PAGE_PATHS.RESET_PASSWORD} element={<Forgot_password_otp_page />} />
 
 
           {/* Catch all: Redirect unknown routes */}

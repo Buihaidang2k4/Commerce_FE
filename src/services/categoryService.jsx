@@ -1,13 +1,7 @@
+import { CATEGORY_API } from '../constants/apiPathConstants';
 import apiBase from "./apiBase";
 
-const CATEGORY_API = {
-    ALL: '/categories/all',
-    GET_BY_ID: (categoryId) => `/categories/category/${categoryId}`,
-    GET_BY_NAME: (categoryName) => `/categories/category/categoryName/${categoryName}`,
-    CREATE: '/categories/category/add',
-    UPDATE: (categoryId) => `/categories/category/${categoryId}/update`,
-    DELETE: (categoryId) => `/categories/category/${categoryId}/delete`,
-};
+
 
 const categoryService = {
     getAllCategories: () => apiBase.get(CATEGORY_API.ALL),

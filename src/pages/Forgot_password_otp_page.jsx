@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logo from '../assets/image/mylogo.png';
+import validateEmail, { normalizeEmail } from '@/utils/validateEmail';
+import validatePassword from '@/utils/validatePassword';
+import getApiErrorMessage from '@/utils/authError';
+import useAuthStore from '@/stores/useAuthStore';
 import useForgotPassword from '../hooks/auth/forgot_password/useForgotPassword';
 import useApplyOtpForgotPassword from '@/hooks/auth/forgot_password/useApplyOtpForgotPassword';
 import { 
@@ -37,47 +41,77 @@ export default function ForgotPasswordOtpPage() {
     const [error, setError] = useState('');
     const [successDialog, setSuccessDialog] = useState(false);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-        setError('');
-    };
-
-    const { mutate: reSendOtp } = useForgotPassword();
-    function handleClickResendOtp() {
-        reSendOtp({ email: initialEmail });
-    }
-
+    const inFlight = useRef(false);
+    const [notice, setNotice] = useState('');
+    const [now, setNow] = useState(() => Date.now());
+    const [resendUntil, setResendUntil] = useState(() => Number(location.state?.otpSentAt || 0) + 60_000);
+    const remaining = Math.max(0, Math.ceil((resendUntil - now) / 1000));
+    const { mutateAsync: reSendOtp, isPending: resending } = useForgotPassword();
     const { mutateAsync: applyOtpForgotPassword } = useApplyOtpForgotPassword();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+        setFormData(previous => ({ ...previous, [name]: name === 'otp' ? value.replace(/\D/g, '').slice(0, 6) : value,
+            ...(name === 'email' ? { otp: '' } : {}) }));
+        if (name === 'email') setResendUntil(0);
+        setError('');
+        setNotice('');
+    };
+
+    const handleClickResendOtp = async () => {
+        if (inFlight.current || remaining > 0 || successDialog) return;
+        const email = normalizeEmail(formData.email);
+        const validation = validateEmail(email);
+        if (validation) { setError(validation); return; }
+        inFlight.current = true;
+        setError('');
+        setNotice('');
+        try {
+            await reSendOtp({ email });
+            setFormData(previous => ({ ...previous, email, otp: '' }));
+            setResendUntil(Date.now() + 60_000);
+            setNow(Date.now());
+            setNotice('Nếu email thuộc tài khoản đang hoạt động, mã OTP sẽ được gửi đến hộp thư.');
+        } catch (failure) {
+            const wait = Number(failure.response?.headers?.['retry-after']);
+            if (failure.response?.status === 429 && wait > 0) {
+                setResendUntil(Date.now() + wait * 1000);
+                setNow(Date.now());
+            }
+            setError(getApiErrorMessage(failure, 'Chưa thể gửi lại OTP. Vui lòng thử lại.'));
+        } finally {
+            inFlight.current = false;
+        }
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (inFlight.current || successDialog) return;
+        const email = normalizeEmail(formData.email);
+        const otp = formData.otp.trim();
+        const validation = validateEmail(email) || (!/^\d{6}$/.test(otp) ? 'Mã OTP phải có đúng 6 chữ số.' : '')
+            || validatePassword(formData.newPassword)
+            || (formData.newPassword !== formData.confirmPassword ? 'Mật khẩu xác nhận không khớp.' : '');
+        if (validation) { setError(validation); return; }
+        inFlight.current = true;
         setLoading(true);
         setError('');
-
-        if (formData.newPassword !== formData.confirmPassword) {
-            setError('Mật khẩu nhập lại không khớp.');
-            setLoading(false);
-            return;
-        }
-
-        if (formData.newPassword.length < 6) {
-            setError('Mật khẩu mới phải có ít nhất 6 ký tự.');
-            setLoading(false);
-            return;
-        }
-
         try {
-            await applyOtpForgotPassword({
-                email: formData.email,
-                otp: formData.otp,
-                newPassword: formData.newPassword
-            });
-
+            await applyOtpForgotPassword({ email, otp, newPassword: formData.newPassword });
+            if (normalizeEmail(useAuthStore.getState().user?.email) === email) {
+                await useAuthStore.getState().logout({ silent: true });
+            }
+            setFormData(previous => ({ ...previous, email, otp: '', newPassword: '', confirmPassword: '' }));
             setSuccessDialog(true);
-        } catch (err) {
-            setError('Mã OTP không đúng hoặc đã hết hạn.');
-            console.error(err);
+        } catch (failure) {
+            setError(getApiErrorMessage(failure, 'Chưa thể đặt lại mật khẩu. Vui lòng thử lại.'));
         } finally {
+            inFlight.current = false;
             setLoading(false);
         }
     };
@@ -116,6 +150,7 @@ export default function ForgotPasswordOtpPage() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <fieldset disabled={loading || resending || successDialog} className="contents">
                         {/* Email field */}
                         <div className="space-y-1.5">
                             <label className="block text-sm font-semibold text-slate-700">Email tài khoản</label>
@@ -125,6 +160,7 @@ export default function ForgotPasswordOtpPage() {
                                 </div>
                                 <input
                                     type="email"
+                                    maxLength={254}
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
@@ -135,22 +171,26 @@ export default function ForgotPasswordOtpPage() {
                             </div>
                         </div>
 
+                        {notice && <p role="status" className="text-sm text-green-700">{notice}</p>}
                         {/* OTP Input */}
                         <div className="space-y-1.5">
                             <div className="flex justify-between items-center">
                                 <label className="block text-sm font-semibold text-slate-700">Mã OTP (6 chữ số)</label>
                                 <button
                                     type="button"
-                                    onClick={() => handleClickResendOtp()}
+                                    onClick={handleClickResendOtp}
+                                    disabled={remaining > 0 || loading || resending}
                                     className="text-xs text-blue-600 hover:text-blue-700 font-semibold cursor-pointer transition hover:underline"
                                 >
-                                    Gửi lại mã?
+                                    {resending ? 'Đang gửi...' : remaining > 0 ? `Gửi lại sau ${remaining}s` : 'Gửi lại mã'}
                                 </button>
                             </div>
                             <input
                                 type="text"
                                 inputMode="numeric"
-                                pattern="[0-9]*"
+                                pattern="[0-9]{6}"
+                                minLength={6}
+                                autoComplete="one-time-code"
                                 maxLength={6}
                                 name="otp"
                                 value={formData.otp}
@@ -174,7 +214,10 @@ export default function ForgotPasswordOtpPage() {
                                     value={formData.newPassword}
                                     onChange={handleChange}
                                     required
-                                    placeholder="Tối thiểu 6 ký tự"
+                                    placeholder="Từ 8 đến 72 ký tự"
+                                    minLength={8}
+                                    maxLength={72}
+                                    autoComplete="new-password"
                                     className="w-full pl-11 pr-11 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm"
                                 />
                                 <button
@@ -199,6 +242,7 @@ export default function ForgotPasswordOtpPage() {
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
                                     name="confirmPassword"
+                                    autoComplete="new-password" minLength={8} maxLength={72}
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     required
@@ -249,6 +293,7 @@ export default function ForgotPasswordOtpPage() {
                                 </>
                             )}
                         </button>
+                        </fieldset>
                     </form>
                 </div>
 
@@ -311,7 +356,7 @@ export default function ForgotPasswordOtpPage() {
                             </p>
 
                             <button
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate('/login', { replace: true, state: { email: formData.email } })}
                                 className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
                             >
                                 <ShoppingBag className="w-5 h-5" />

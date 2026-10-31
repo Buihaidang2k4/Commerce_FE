@@ -1,14 +1,8 @@
+import { ADDRESS } from '../constants/apiPathConstants';
 import apiBase from "./apiBase";
 
 // Định nghĩa endpoint dạng hàm (giống cartItemService)
-const ADDRESS = {
-    ALL: '/address/all',
-    GET_BY_ID: (addressId) => `/address/${addressId}`,
-    GET_BY_PROFILE: (profileId) => `/address/profile/${profileId}`,
-    UPDATE: '/address/update',
-    CREATE: (profileId) => `/address/user-profile/${profileId}/add`,
-    DELETE: '/address/delete',
-};
+
 
 const addressService = {
     getAll: () => apiBase.get(ADDRESS.ALL),

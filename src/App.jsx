@@ -13,11 +13,11 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthSyncProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthSyncProvider>
           <AppRouter />
-        </BrowserRouter>
-      </AuthSyncProvider>
+        </AuthSyncProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import logo from "@/assets/image/mylogo.png";
 import useRegister from "@/hooks/auth/useRegister";
 import { Link } from "react-router-dom";
@@ -22,7 +22,6 @@ import {
 export default function Register() {
     const {
         email, setEmail,
-        username, setUsername,
         password, setPassword,
         confirmPassword, setConfirmPassword,
         error, handleRegister,
@@ -69,29 +68,7 @@ export default function Register() {
 
                         {/* Form */}
                         <form className="space-y-4" onSubmit={handleRegister} autoComplete="on">
-                            {/* Username Input */}
-                            <div className="space-y-1.5">
-                                <label htmlFor="username" className="block text-sm font-semibold text-slate-700">
-                                    Tên người dùng <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                        <User className="w-5 h-5" />
-                                    </div>
-                                    <input
-                                        id="username"
-                                        type="text"
-                                        name="username"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        required
-                                        autoComplete="username"
-                                        placeholder="nguyenvana"
-                                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-200"
-                                    />
-                                </div>
-                            </div>
-
+                            <fieldset disabled={loading || dialog.show} className="contents">
                             {/* Email Input */}
                             <div className="space-y-1.5">
                                 <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
@@ -104,6 +81,7 @@ export default function Register() {
                                     <input
                                         id="email"
                                         type="email"
+                                    maxLength={254}
                                         name="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -133,7 +111,7 @@ export default function Register() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
-                                            autoComplete="new-password"
+                                            autoComplete="new-password" minLength={8} maxLength={72}
                                             placeholder="••••••••"
                                             className="w-full pl-11 pr-10 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-200"
                                         />
@@ -165,7 +143,7 @@ export default function Register() {
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             required
-                                            autoComplete="new-password"
+                                            autoComplete="new-password" minLength={8} maxLength={72}
                                             placeholder="••••••••"
                                             className="w-full pl-11 pr-10 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-200"
                                         />
@@ -221,7 +199,7 @@ export default function Register() {
                                 ) : (
                                     <>
                                         <Sparkles className="w-5 h-5" />
-                                        <span>Đăng ký nhận quà ngay</span>
+                                        <span>Tạo tài khoản</span>
                                     </>
                                 )}
                             </button>
@@ -229,10 +207,11 @@ export default function Register() {
                             {/* Footer Link */}
                             <p className="mt-4 text-center text-sm text-slate-500">
                                 Đã có tài khoản MyShop?{" "}
-                                <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition ml-1">
+                                <Link to="/login" state={{ email }} className="font-bold text-blue-600 hover:text-blue-700 hover:underline transition ml-1">
                                     Đăng nhập ngay
                                 </Link>
                             </p>
+                            </fieldset>
                         </form>
                     </div>
 
@@ -326,12 +305,12 @@ export default function Register() {
                                 {dialog.message}
                                 <br />
                                 <span className="text-xs text-slate-400 mt-2 block">
-                                    Voucher chào mừng 50.000đ đã được thêm vào ví của bạn. Hãy đăng nhập để bắt đầu mua sắm ngay!
+                                    Bạn có thể đăng nhập bằng email và mật khẩu vừa đăng ký.
                                 </span>
                             </p>
                             
                             <Link
-                                to="/login"
+                                to="/login" state={{ email }}
                                 className="w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
                             >
                                 <ShoppingBag className="w-5 h-5" />

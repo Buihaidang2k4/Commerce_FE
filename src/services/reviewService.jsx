@@ -1,9 +1,7 @@
+import { REVIEW_API } from '../constants/apiPathConstants';
 import apiBase from "./apiBase";
 
-const REVIEW_API = {
-    GET_BY_PRODUCT: (productId) => `/reviews/product/${productId}`,
-    CREATE: '/reviews/create-review',
-};
+
 
 const reviewService = {
     getReviewsByProductId: (productId, { page, size, sortBy, direction }) =>

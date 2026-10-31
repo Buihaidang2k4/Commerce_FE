@@ -1,19 +1,7 @@
+import { CART_ITEM_API } from '../constants/apiPathConstants';
 import apiBase from "./apiBase";
 
-const CART_ITEM_API = {
-    GET_BY_CART_AND_ITEM: (cartId, cartItemId) =>
-        `/cartItems/cart/${cartId}/cartItem/${cartItemId}`,
 
-    GET_BY_IDS: (profileId) => `/cartItems/${profileId}/ids`,
-
-    ADD_ITEM: '/cartItems/cartItem/addItemToCart',
-
-    UPDATE_QUANTITY: (cartId, cartItemId, quantity) =>
-        `/cartItems/cart/${cartId}/cartItem/${cartItemId}/updateItemQuantity/${quantity}`,
-
-    REMOVE_ITEM: (cartId, cartItemId) =>
-        `/cartItems/cart/${cartId}/cartItem/${cartItemId}/removeItemFromCart`,
-};
 
 const cartItemService = {
     getCartItems: (cartId, cartItemId) =>

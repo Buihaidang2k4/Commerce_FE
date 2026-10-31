@@ -20,11 +20,14 @@ export default function useLogout() {
 
     if (result.isConfirmed) {
       try {
-        logout();
-        Swal.fire("Đăng xuất thành công", "", "success");
-        exitOrder("/login");
-      } catch (error) {
-        console.error("Logout error:", error);
+        const response = await logout();
+        if (response.success) {
+          await Swal.fire("Đăng xuất thành công", "", "success");
+          exitOrder("/login");
+        } else {
+          await Swal.fire("Chưa thể hoàn tất đăng xuất", "Vui lòng kiểm tra kết nối và thử lại.", "error");
+        }
+      } catch {
         Swal.fire("Lỗi", "Không thể đăng xuất. Vui lòng thử lại.", "error");
       }
     }

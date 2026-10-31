@@ -93,10 +93,6 @@ export default function UserInfo() {
             </div>
             <ul className="space-y-1">
               <li className="flex justify-between">
-                <span>Google</span>
-                <span className="text-green-600">Đã liên kết</span>
-              </li>
-              <li className="flex justify-between">
                 <span>Zalo</span>
                 <span className="text-gray-500">Chưa liên kết</span>
               </li>

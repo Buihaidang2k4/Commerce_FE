@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import logo from '../assets/image/mylogo.png';
-import GoogleLoginButton from '../components/Login/GoogleLoginButton';
 import useLogin from '../hooks/auth/login/useLogin';
 import { Link } from 'react-router-dom';
 import useLoginForm from '../hooks/auth/login/useLoginForm';
@@ -29,6 +28,7 @@ export default function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        if (loading) return;
         const result = await submitLogin(email, password);
         if (result.success) {
             redirectByRole(result.role);
@@ -82,6 +82,7 @@ export default function Login() {
                                 </div>
                                 <input
                                     type="email"
+                                    maxLength={254}
                                     value={email}
                                     name="email"
                                     onChange={(e) => setEmail(e.target.value)}
@@ -108,7 +109,7 @@ export default function Login() {
                                     name="password"
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    autoComplete="current-password"
+                                    autoComplete="current-password" maxLength={72}
                                     placeholder="••••••••"
                                     className="w-full pl-11 pr-11 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-200"
                                 />
@@ -173,25 +174,6 @@ export default function Login() {
                             )}
                         </button>
                     </form>
-
-                    {/* Divider */}
-                    <div className="relative my-7">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-slate-200"></div>
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                            <span className="px-4 bg-slate-50 text-slate-400 font-semibold tracking-wider">
-                                Hoặc tiếp tục với
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Social Login */}
-                    <div className="flex justify-center">
-                        <div className="w-full flex justify-center">
-                            <GoogleLoginButton />
-                        </div>
-                    </div>
 
                     {/* Footer Register link */}
                     <div className="mt-8 text-center text-sm text-slate-500">
