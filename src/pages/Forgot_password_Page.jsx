@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/image/mylogo.png'; // Đảm bảo đường dẫn đúng
+import logo from '../assets/image/mylogo.png';
 import useForgotPassword from '../hooks/auth/forgot_password/useForgotPassword';
+import { 
+    Mail, 
+    ArrowLeft, 
+    ShieldCheck, 
+    Truck, 
+    RotateCcw, 
+    KeyRound, 
+    Send,
+    Sparkles
+} from 'lucide-react';
 
 export default function ForgotPasswordPage() {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(false); // Trạng thái đã gửi thành công
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState('');
     const { mutate: forgotPassword } = useForgotPassword();
 
@@ -36,125 +46,160 @@ export default function ForgotPasswordPage() {
                     state: { email },
                 }
             ), 3000
-        )
-    }
+        );
+    };
 
     return (
-        <div className="min-h-screen flex bg-slate-900 font-sans text-slate-100">
+        <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50/20 to-indigo-50/30 font-sans text-slate-800">
             {/* --- BÊN TRÁI: FORM --- */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 py-12 lg:px-16 relative z-10">
-                {/* Back Button */}
-                <div className="absolute top-8 left-8 lg:left-16">
-                    <Link to="/login" className="flex items-center text-slate-400 hover:text-white transition gap-2 text-sm font-medium">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        Back to Login
+            <div className="w-full lg:w-1/2 flex flex-col justify-between px-6 py-8 sm:px-12 lg:px-16 xl:px-24 z-10">
+                {/* Back to Login link */}
+                <div>
+                    <Link 
+                        to="/login" 
+                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors group mb-6"
+                    >
+                        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                        <span>Quay lại Đăng nhập</span>
                     </Link>
                 </div>
 
-                <div className="max-w-md w-full mx-auto">
-                    {/* ICON KHÓA */}
-                    <div className="mb-6 flex justify-center lg:justify-start">
-                        <div className="h-12 w-12 bg-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500/30 text-blue-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-12 0v1H7a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V9a6 6 0 00-6-5z" />
-                            </svg>
+                <div className="max-w-md w-full mx-auto my-auto py-6">
+                    {/* Header */}
+                    <div className="mb-8">
+                        <div className="flex items-center gap-3 mb-4">
+                            <img src={logo} alt="MyShop Logo" className="h-10 w-auto rounded-lg shadow-sm" />
+                            <div className="h-9 w-9 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-bold">
+                                <KeyRound className="w-5 h-5" />
+                            </div>
                         </div>
+                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                            Khôi phục mật khẩu
+                        </h1>
+                        <p className="text-slate-500 text-sm mt-2">
+                            Đừng lo lắng! Nhập địa chỉ email tài khoản MyShop của bạn, chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu.
+                        </p>
                     </div>
 
-                    {/* NỘI DUNG CHÍNH */}
                     {!isSubmitted ? (
-                        /* --- TRẠNG THÁI 1: FORM NHẬP EMAIL --- */
-                        <>
-                            <div className="mb-8 text-center lg:text-left">
-                                <h1 className="text-3xl font-bold text-white mb-2">Forgot password?</h1>
-                                <p className="text-slate-400">
-                                    No worries, we'll send you reset instructions.
-                                </p>
-                            </div>
-
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="space-y-1">
-                                    <label htmlFor="email" className="block text-sm font-medium text-slate-300">
-                                        Email address
-                                    </label>
+                        /* --- FORM NHẬP EMAIL --- */
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <div className="space-y-1.5">
+                                <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
+                                    Địa chỉ Email tài khoản <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                        <Mail className="w-5 h-5" />
+                                    </div>
                                     <input
                                         id="email"
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         required
-                                        placeholder="Enter your email"
-                                        className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                                        placeholder="name@example.com"
+                                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-200"
                                     />
                                 </div>
+                            </div>
 
-                                {error && (
-                                    <div className="text-red-400 text-sm bg-red-500/10 p-2 rounded border border-red-500/20">
-                                        {error}
-                                    </div>
+                            {error && (
+                                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-start gap-2.5">
+                                    <span>{error}</span>
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className={`w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            >
+                                {loading ? (
+                                    <>
+                                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span>Đang gửi mã xác nhận...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="w-5 h-5" />
+                                        <span>Gửi mã khôi phục</span>
+                                    </>
                                 )}
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className={`w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                >
-                                    {loading ? "Sending instruction..." : "Reset password"}
-                                </button>
-                            </form>
-                        </>
+                            </button>
+                        </form>
                     ) : (
-                        /* --- TRẠNG THÁI 2: THÔNG BÁO THÀNH CÔNG --- */
-                        <div className="text-center lg:text-left animate-fade-in-up">
-                            <h1 className="text-3xl font-bold text-white mb-2">Check your email</h1>
-                            <p className="text-slate-400 mb-6">
-                                We sent a password reset link to <span className="text-white font-medium">{email}</span>
+                        /* --- THÔNG BÁO GỬI THÀNH CÔNG --- */
+                        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
+                            <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <Mail className="w-7 h-7" />
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-900 mb-2">Kiểm tra hộp thư đến</h2>
+                            <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                                Chúng tôi đã chuẩn bị mã OTP xác thực và hướng dẫn cho email:
+                                <br />
+                                <span className="font-semibold text-slate-900">{email}</span>
                             </p>
 
-                            <div className="space-y-4">
-                                <a
+                            <div className="space-y-3">
+                                <button
                                     onClick={() => handleClickOpenEmail()}
-                                    href="https://gmail.com"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="block w-full text-center py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+                                    className="w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition"
                                 >
-                                    Open email app
-                                </a>
+                                    Tiếp tục nhập mã OTP
+                                </button>
 
-                                <p className="text-sm text-slate-500 text-center">
-                                    Didn't receive the email?{" "}
-                                    <button
-                                        onClick={() => setIsSubmitted(false)}
-                                        className="text-blue-500 hover:underline font-medium"
-                                    >
-                                        Click to resend
-                                    </button>
-                                </p>
+                                <button
+                                    onClick={() => setIsSubmitted(false)}
+                                    className="text-sm text-blue-600 hover:underline font-semibold"
+                                >
+                                    Chưa nhận được email? Bấm để thử lại
+                                </button>
                             </div>
                         </div>
                     )}
                 </div>
+
+                {/* Bottom Trust Badges */}
+                <div className="pt-6 border-t border-slate-200/80 grid grid-cols-3 gap-2 text-center text-xs text-slate-500">
+                    <div className="flex items-center justify-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Bảo mật 100%</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5">
+                        <Truck className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span>Hỗ trợ 24/7</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1.5">
+                        <RotateCcw className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>An tâm mua sắm</span>
+                    </div>
+                </div>
             </div>
 
-            {/* --- BÊN PHẢI: HÌNH ẢNH --- */}
-            <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-800">
+            {/* --- BÊN PHẢI: BANNER --- */}
+            <div className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-slate-900">
                 <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center"
+                    className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-[15s] hover:scale-105"
                     style={{
                         backgroundImage: `url('https://images.unsplash.com/photo-1555421689-4917475181f3?q=80&w=2070&auto=format&fit=crop')`
                     }}
                 ></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-blue-900/30"></div>
 
                 <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
-                    {/* Logo nhỏ */}
-                    <img src={logo} alt="Logo" className="h-10 w-auto mb-6 opacity-80" />
-                    <h3 className="text-3xl font-bold mb-2">Secure your account</h3>
-                    <p className="text-slate-200 text-lg font-light opacity-90">
-                        "Security is not a product, but a process."
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold backdrop-blur-sm mb-4">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                        BẢO MẬT TÀI KHOẢN
+                    </div>
+                    <h2 className="text-3xl font-extrabold mb-3 leading-snug">
+                        Bảo vệ an toàn cho tài khoản và đơn hàng của bạn
+                    </h2>
+                    <p className="text-slate-300 text-base font-light leading-relaxed max-w-lg">
+                        MyShop áp dụng các tiêu chuẩn mã hóa tiên tiến nhất để đảm bảo thông tin cá nhân và dữ liệu thanh toán của bạn luôn được bảo vệ tuyệt đối.
                     </p>
                 </div>
             </div>
